@@ -1,0 +1,1759 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Controle de Treino · Bruna</title>
+  
+  <!-- Configurações PWA / iOS Safari -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Treino">
+  <meta name="theme-color" content="#193e43">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+
+  <!-- Firebase Compat CDN (v10.12.0) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <!-- Arquivo de configuração do Firebase -->
+  <script src="./firebase-config.js"></script>
+
+  <style>
+    :root {
+      --ink: #193e43;
+      --ink-dark: #0e272b;
+      --ink-light: #255b62;
+      --muted: #5f7477;
+      --line: #d8e4e2;
+      --mint: #edf6f4;
+      --mint-light: #f7faf9;
+      --accent: #d97706;
+      --accent-light: #fffbeb;
+      --accent-dark: #b45309;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --danger: #dc2626;
+      --paper: #ffffff;
+      --bg: #f0f5f4;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 2px 6px rgba(25, 62, 67, 0.05);
+      --shadow-md: 0 4px 14px rgba(25, 62, 67, 0.08);
+      --shadow-lg: 0 10px 25px rgba(25, 62, 67, 0.12);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      color: #173235;
+      background: var(--bg);
+      line-height: 1.4;
+      padding-top: max(12px, env(safe-area-inset-top));
+      padding-bottom: max(32px, env(safe-area-inset-bottom));
+    }
+
+    .app {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 12px 16px 80px;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      gap: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .brand-text h1 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .brand-text p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Status Pill */
+    .cloud-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #475569;
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .cloud-status.synced { background: var(--success-bg); color: var(--success); }
+    .cloud-status.syncing { background: #eff6ff; color: #2563eb; }
+    .cloud-status.offline { background: var(--accent-light); color: var(--accent); }
+    .cloud-status.demo { background: #fef3c7; color: #b45309; }
+
+    .btn-icon {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-icon:hover { background: var(--mint); }
+    .btn-icon:active { transform: scale(0.96); }
+
+    /* Demo / Config Notice Banner */
+    .notice-banner {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      border-radius: var(--radius-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #92400e;
+      gap: 10px;
+    }
+    .notice-banner button {
+      background: #b45309;
+      color: #fff;
+      border: 0;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Tabs */
+    .tabs-wrapper {
+      margin: 16px 0 14px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+    }
+    .tabs-wrapper::-webkit-scrollbar { display: none; }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      min-width: max-content;
+    }
+    .tab {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px 13px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      min-width: 68px;
+      transition: all 0.15s ease;
+    }
+    .tab small {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .tab.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+      box-shadow: var(--shadow-sm);
+    }
+    .tab.active small { color: #9fccc5; }
+    .tab:active { transform: scale(0.97); }
+
+    /* Card & Workout Header */
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+    .workout-header {
+      padding: 16px 18px;
+      background: var(--mint);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .workout-title h2 {
+      margin: 0;
+      font-size: 18px;
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .workout-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .meta-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .badge {
+      background: #d4e8e4;
+      color: var(--ink);
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .date-input {
+      border: 1px solid #bfdbd6;
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      outline: none;
+    }
+
+    /* Strategy Guide */
+    .guide {
+      margin: 14px 18px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: var(--accent-light);
+      color: #78350f;
+      font-size: 12.5px;
+      line-height: 1.45;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .guide strong { color: #92400e; }
+
+    /* Rest Timer Bar */
+    .timer-bar {
+      margin: 0 18px 14px;
+      padding: 10px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-sm);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .timer-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .timer-clock {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--accent);
+      background: #fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid #fed7aa;
+      min-width: 62px;
+      text-align: center;
+    }
+    .timer-presets {
+      display: flex;
+      gap: 6px;
+    }
+    .timer-preset-btn {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #334155;
+    }
+    .timer-preset-btn:active { background: var(--mint); }
+    .timer-preset-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Exercise List / Cards (Mobile-optimized) */
+    .exercise-list {
+      padding: 6px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .ex-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.15s ease;
+    }
+    .ex-card:focus-within {
+      border-color: #72b2a8;
+      box-shadow: 0 0 0 1px #72b2a8;
+    }
+    .ex-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .ex-name-box { flex: 1; }
+    .ex-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink);
+      margin: 0;
+    }
+    .ex-specs {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .ex-last-pill {
+      background: var(--mint);
+      border: 1px solid #d4eae6;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ink);
+      text-align: right;
+      white-space: nowrap;
+    }
+    .ex-last-pill small {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    /* Progression Chip */
+    .progression-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .progression-chip.ready {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .progression-chip.repeat {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+    .progression-chip.initial {
+      background: #fffbeb;
+      color: #b45309;
+      border: 1px solid #fde68a;
+    }
+
+    /* Inputs Grid */
+    .ex-inputs-grid {
+      display: grid;
+      grid-template-columns: 1.2fr repeat(3, 1fr) 0.9fr;
+      gap: 8px;
+      align-items: end;
+    }
+    .input-col {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .input-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .input-field {
+      width: 100%;
+      border: 1.5px solid #d4dedd;
+      border-radius: 8px;
+      padding: 9px 6px;
+      /* Font size >= 16px is required by iOS Safari to prevent screen zoom on tap */
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--ink);
+      background: #fffefb;
+      outline: none;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    .input-field::-webkit-outer-spin-button,
+    .input-field::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .input-field:focus {
+      border-color: #193e43;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(25, 62, 67, 0.15);
+    }
+    .input-field::placeholder {
+      font-weight: 400;
+      color: #a0b2b0;
+      font-size: 13px;
+    }
+
+    /* Quick Load Helper Buttons */
+    .quick-helper {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .quick-btn {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+    }
+    .quick-btn:active { background: #e2e8f0; }
+
+    /* Sticky Bottom Action Bar */
+    .bottom-bar {
+      position: sticky;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line);
+      padding: 12px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      z-index: 50;
+      margin-top: 10px;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    .save-feedback {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--success);
+      flex: 1;
+      min-height: 20px;
+    }
+    .btn-primary {
+      background: var(--ink);
+      color: #fff;
+      border: 0;
+      border-radius: 9px;
+      padding: 13px 22px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(25, 62, 67, 0.25);
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .btn-primary:active { transform: scale(0.97); background: var(--ink-dark); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* History View */
+    .history-container { padding: 18px; }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .history-header h2 { margin: 0; font-size: 20px; color: var(--ink); }
+    .history-filter-pills {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .filter-pill {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #475569;
+    }
+    .filter-pill.active {
+      background: var(--ink);
+      color: #fff;
+      border-color: var(--ink);
+    }
+
+    /* History Table / Cards */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th {
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 12px;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
+      vertical-align: middle;
+    }
+    tr:nth-child(even) td { background: var(--mint-light); }
+    .history-delete-btn {
+      background: transparent;
+      border: 0;
+      color: #ef4444;
+      cursor: pointer;
+      padding: 4px;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+    .history-delete-btn:hover { opacity: 1; }
+
+    .empty-state {
+      padding: 36px 18px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* Modals (Auth, Backup, Cloud Config) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(14, 39, 43, 0.6);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal-card {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 480px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-card h3 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      color: var(--ink);
+      font-weight: 800;
+    }
+    .modal-card p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .modal-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #f1f5f9;
+      border: 0;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .form-group {
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .form-control {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 16px;
+      color: var(--ink);
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 2px rgba(25, 62, 67, 0.15);
+    }
+    .form-toggle {
+      display: flex;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .form-toggle button {
+      flex: 1;
+      padding: 8px;
+      border: 0;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .form-toggle button.active {
+      background: var(--ink);
+      color: #fff;
+    }
+    .modal-alert {
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .modal-alert.error { background: #fee2e2; color: #991b1b; display: block; }
+    .modal-alert.success { background: #ecfdf5; color: #047857; display: block; }
+
+    /* Hidden utility */
+    .hidden { display: none !important; }
+
+    /* Desktop Adjustments */
+    @media (min-width: 768px) {
+      .app { padding-top: 24px; }
+      .brand-text h1 { font-size: 24px; }
+      .ex-inputs-grid {
+        grid-template-columns: 140px repeat(3, 90px) 90px;
+        justify-content: start;
+        gap: 12px;
+      }
+      .tabs { gap: 10px; }
+      .tab { min-width: 90px; padding: 12px 14px; font-size: 14px; }
+      .tab small { font-size: 11px; }
+    }
+
+    /* Print styling */
+    @media print {
+      body { background: #fff; padding: 0; }
+      .app { max-width: none; padding: 0; }
+      .top-bar, .notice-banner, .tabs-wrapper, .timer-bar, .bottom-bar, #historyView, .quick-helper { display: none !important; }
+      .card { box-shadow: none; border: 0; }
+      .workout-header { background: #fff; padding: 0 0 10px; }
+      .ex-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; margin-bottom: 8px; }
+      .input-field { border: 0; background: transparent; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Top Header -->
+    <header class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">B</div>
+        <div class="brand-text">
+          <h1>Controle de Treino</h1>
+          <p>Mulher 27 anos · Hipertrofia · Foco Tríceps</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div id="cloudStatus" class="cloud-status demo" title="Clique para detalhes da nuvem">
+          <span id="cloudIcon">☁️</span>
+          <span id="cloudLabel">Nuvem</span>
+        </div>
+        <button id="menuBtn" class="btn-icon" aria-label="Menu e Configurações">⚙️ Opções</button>
+      </div>
+    </header>
+
+    <!-- Banner caso Firebase não esteja configurado ainda -->
+    <div id="configNotice" class="notice-banner hidden">
+      <span>⚙️ <strong>Acesso online:</strong> Conecte sua conta do Firebase para salvar treinos com o PC desligado.</span>
+      <button id="noticeConfigBtn">Conectar Nuvem</button>
+    </div>
+
+    <!-- Navegação de Treinos (Tabs A, B, C, D, E e Histórico) -->
+    <div class="tabs-wrapper">
+      <nav class="tabs" id="tabs" aria-label="Divisões de Treino"></nav>
+    </div>
+
+    <!-- Visualização de Treino Ativo -->
+    <main id="workoutView"></main>
+
+    <!-- Visualização de Histórico -->
+    <section class="card hidden" id="historyView"></section>
+  </div>
+
+  <!-- Modal de Opções / Menu / Nuvem -->
+  <div id="menuModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="closeMenuBtn" aria-label="Fechar">✕</button>
+      <h3>Opções & Nuvem</h3>
+      <p>Gerencie sua autenticação em nuvem, backups e configurações do aplicativo.</p>
+
+      <!-- Status do Usuário Atual -->
+      <div id="userSection" style="margin-bottom: 20px; padding: 12px; background: var(--mint); border-radius: var(--radius-sm);">
+        <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); margin-bottom: 4px;">Sua Conta</div>
+        <div id="userDisplay" style="font-weight: 700; color: var(--ink); font-size: 15px;">Não conectada (Modo Offline)</div>
+        <div style="margin-top: 8px; display: flex; gap: 8px;">
+          <button id="authBtn" class="btn-icon" style="flex: 1; justify-content: center; background: var(--ink); color: #fff;">Entrar na Conta</button>
+          <button id="logoutBtn" class="btn-icon hidden" style="flex: 1; justify-content: center; color: var(--danger);">Sair da Conta</button>
+        </div>
+      </div>
+
+      <!-- Configuração Rápida do Firebase -->
+      <div style="margin-bottom: 20px;">
+        <h4 style="margin: 0 0 6px; font-size: 14px; color: var(--ink);">Conexão Firebase</h4>
+        <p style="margin: 0 0 10px; font-size: 12px;">Se você já tem suas chaves do Firebase, cole aqui para conectar direto no celular.</p>
+        <button id="openFirebaseConfigBtn" class="btn-icon" style="width: 100%; justify-content: center;">Configurar Chaves da Nuvem</button>
+      </div>
+
+      <!-- Backup e Impressão -->
+      <div>
+        <h4 style="margin: 0 0 6px; font-size: 14px; color: var(--ink);">Backup & Segurança</h4>
+        <p style="margin: 0 0 10px; font-size: 12px;">Exporte cópias offline ou transfira dados entre dispositivos.</p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button id="exportBtn" class="btn-icon" style="justify-content: center;">💾 Exportar Histórico (Download JSON)</button>
+          <label class="btn-icon" style="justify-content: center; cursor: pointer;">
+            📥 Importar Histórico de Backup
+            <input id="importInput" type="file" accept="application/json" style="display: none;">
+          </label>
+          <button id="printBtn" class="btn-icon" style="justify-content: center;">🖨️ Imprimir Treino em Folha A4</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Login / Cadastro do Firebase -->
+  <div id="authModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="closeAuthBtn" aria-label="Fechar">✕</button>
+      <h3 id="authTitle">Entrar na Conta</h3>
+      <p>Acesse seu controle de treino de qualquer celular ou computador.</p>
+
+      <div class="form-toggle">
+        <button id="tabLogin" class="active">Já tenho conta</button>
+        <button id="tabRegister">Criar nova conta</button>
+      </div>
+
+      <div id="authAlert" class="modal-alert"></div>
+
+      <form id="authForm">
+        <div class="form-group">
+          <label for="authEmail">E-mail</label>
+          <input type="email" id="authEmail" class="form-control" required placeholder="seu@email.com" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="authPassword">Senha</label>
+          <input type="password" id="authPassword" class="form-control" required placeholder="Mínimo 6 caracteres" autocomplete="current-password">
+        </div>
+        <button type="submit" id="authSubmitBtn" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 12px;">Entrar</button>
+      </form>
+
+      <div style="margin-top: 14px; text-align: center;">
+        <button id="resetPasswordBtn" style="background: none; border: 0; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline;">Esqueci minha senha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Configuração de Chaves Firebase -->
+  <div id="firebaseConfigModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <button class="modal-close" id="closeFirebaseConfigBtn" aria-label="Fechar">✕</button>
+      <h3>Chaves do Firebase</h3>
+      <p>Cole o objeto <code>firebaseConfig</code> fornecido pelo Console do Firebase (Google Cloud gratuito):</p>
+      
+      <div class="form-group">
+        <label for="firebaseConfigTextarea">Configuração JSON ou JavaScript</label>
+        <textarea id="firebaseConfigTextarea" class="form-control" rows="8" style="font-family: monospace; font-size: 12px;" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "treino-bruna.firebaseapp.com",
+  "projectId": "treino-bruna",
+  "storageBucket": "treino-bruna.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abcde"
+}'></textarea>
+      </div>
+      <button id="saveFirebaseConfigBtn" class="btn-primary" style="width: 100%; justify-content: center;">Salvar e Reiniciar Conexão</button>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * 1. PROTOCOLO DE TREINOS PRESERVADO
+     * Mulher de 27 anos, 5x na semana, hipertrofia/força e prioridade em tríceps.
+     */
+    const workouts = {
+      A: {
+        day: "Segunda",
+        title: "Quadríceps + panturrilhas",
+        goal: "Progressão nos movimentos de pernas",
+        exercises: [
+          ["Agachamento livre com barra", "3 x 8", "2-3 min", 150],
+          ["Leg press 45°", "3 x 8", "2-3 min", 150],
+          ["Cadeira extensora", "3 x 8", "90-120 s", 100],
+          ["Panturrilha em pé no hack", "3 x 8", "90-120 s", 100]
+        ]
+      },
+      B: {
+        day: "Terça",
+        title: "Peito + tríceps + deltoide lateral",
+        goal: "Peito e primeiro estímulo direto de tríceps (prioridade)",
+        exercises: [
+          ["Supino normal com barra", "3 x 8", "2-3 min", 150],
+          ["Supino inclinado", "3 x 8", "2-3 min", 150],
+          ["Extensão de halter acima da cabeça", "3 x 8", "90-120 s", 100],
+          ["Tríceps na polia com corda", "3 x 8", "90-120 s", 100],
+          ["Elevação lateral com halteres", "3 x 8", "90 s", 90]
+        ]
+      },
+      C: {
+        day: "Quarta",
+        title: "Posteriores + panturrilhas + abdômen",
+        goal: "Extensão do quadril e flexão do joelho",
+        exercises: [
+          ["Stiff com barra", "3 x 8", "2-3 min", 150],
+          ["Cadeira flexora", "3 x 8", "90-120 s", 100],
+          ["Panturrilha em pé no hack", "3 x 8", "90-120 s", 100],
+          ["Abdominal supra no solo com pés altos", "3 x 8", "60-90 s", 75]
+        ]
+      },
+      D: {
+        day: "Quinta",
+        title: "Costas + bíceps + deltoide posterior",
+        goal: "Puxadas, remadas e flexores do cotovelo",
+        exercises: [
+          ["Puxada fechada (pulley)", "3 x 8", "2 min", 120],
+          ["Remada baixa com triângulo", "3 x 8", "2 min", 120],
+          ["Crucifixo inverso máquina", "3 x 8", "90 s", 90],
+          ["Rosca alternada com halteres", "3 x 8 por braço", "90-120 s", 100],
+          ["Rosca martelo", "3 x 8", "90-120 s", 100]
+        ]
+      },
+      E: {
+        day: "Sexta",
+        title: "Glúteos + tríceps + desenvolvimento",
+        goal: "Glúteos e segundo estímulo direto de tríceps (prioridade)",
+        exercises: [
+          ["Elevação pélvica na máquina", "3 x 8", "2-3 min", 150],
+          ["Agachamento búlgaro", "3 x 8 por perna", "2-3 min", 150],
+          ["Abdução de quadril na máquina", "3 x 8", "90-120 s", 100],
+          ["Tríceps testa com corda", "3 x 8", "90-120 s", 100],
+          ["Desenvolvimento Arnold sentado", "3 x 8", "2 min", 120]
+        ]
+      }
+    };
+
+    const LOCAL_STORAGE_KEY = "controleTreinoV3";
+    const FIREBASE_CONFIG_KEY = "treino_firebase_custom_config";
+
+    // Estado da aplicação
+    let state = { history: [] };
+    let current = "A";
+    let filterHistory = "all";
+    let currentUser = null;
+    let isCloudActive = false;
+    let db = null;
+    let auth = null;
+    let unsubscribeHistory = null;
+
+    // Cronômetro de descanso
+    let timerInterval = null;
+    let timerRemaining = 0;
+
+    const today = () => new Date().toISOString().slice(0, 10);
+    const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+
+    // Retorna o último registro salvo de um exercício
+    const latest = exercise => [...state.history].reverse().find(item => item.exercise === exercise && item.load !== "" && item.load !== null && item.load !== undefined);
+
+    // Sugestão de progressão com as regras preservadas
+    const progressionAnalysis = ex => {
+      const last = latest(ex);
+      if (!last) {
+        return {
+          statusText: "Defina a carga inicial.",
+          type: "initial",
+          pillText: "⚖️ Definir carga inicial"
+        };
+      }
+      const reps = Array.isArray(last.reps) ? last.reps.map(Number) : [];
+      const allEight = reps.length >= 3 && reps.every(rep => rep >= 8);
+      const rir = Number(last.rir);
+      const ready = allEight && rir >= 1 && rir <= 2;
+
+      if (ready) {
+        return {
+          statusText: "Pode aumentar no menor incremento.",
+          type: "ready",
+          pillText: "🔥 Pode aumentar carga (+1 a 2 kg)"
+        };
+      } else {
+        return {
+          statusText: "Repita a carga e busque 3 x 8 com boa técnica.",
+          type: "repeat",
+          pillText: "🔁 Manter carga e buscar 3 x 8"
+        };
+      }
+    };
+
+    /**
+     * 2. SINCRONIZAÇÃO EM NUVEM E AUTENTICAÇÃO (FIREBASE)
+     */
+    function getActiveFirebaseConfig() {
+      // 1. Tenta pegar do localStorage do dispositivo
+      const custom = localStorage.getItem(FIREBASE_CONFIG_KEY);
+      if (custom) {
+        try { return JSON.parse(custom); } catch (e) { console.warn(e); }
+      }
+      // 2. Tenta pegar da variável global window.FIREBASE_CONFIG (firebase-config.js)
+      if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && !window.FIREBASE_CONFIG.apiKey.includes("SUA_API_KEY")) {
+        return window.FIREBASE_CONFIG;
+      }
+      return null;
+    }
+
+    function initFirebase() {
+      const config = getActiveFirebaseConfig();
+      if (!config || !window.firebase) {
+        setCloudStatus("demo", "Modo Offline", "Nuvem não configurada. Dados salvos localmente.");
+        document.getElementById("configNotice").classList.remove("hidden");
+        loadLocalData();
+        return;
+      }
+
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(config);
+        }
+        auth = firebase.auth();
+        db = firebase.firestore();
+
+        // Ativa persistência offline no celular (IndexedDB)
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+          console.log("Persistência offline:", err.code);
+        });
+
+        document.getElementById("configNotice").classList.add("hidden");
+
+        // Ouvinte de autenticação
+        auth.onAuthStateChanged(user => {
+          currentUser = user;
+          updateUserUI();
+          if (user) {
+            isCloudActive = true;
+            listenToUserHistory(user.uid);
+          } else {
+            isCloudActive = false;
+            if (unsubscribeHistory) unsubscribeHistory();
+            loadLocalData();
+            setCloudStatus("offline", "Conta desconectada", "Faça login para sincronizar");
+          }
+        });
+
+      } catch (e) {
+        console.error("Erro ao inicializar Firebase:", e);
+        setCloudStatus("demo", "Erro Nuvem", "Falha ao conectar no Firebase");
+        loadLocalData();
+      }
+    }
+
+    function setCloudStatus(type, label, title) {
+      const el = document.getElementById("cloudStatus");
+      const icon = document.getElementById("cloudIcon");
+      const text = document.getElementById("cloudLabel");
+      el.className = `cloud-status ${type}`;
+      text.textContent = label;
+      el.title = title || "";
+      if (type === "synced") icon.textContent = "☁️";
+      else if (type === "syncing") icon.textContent = "🔄";
+      else if (type === "offline") icon.textContent = "⚠️";
+      else icon.textContent = "📱";
+    }
+
+    function updateUserUI() {
+      const display = document.getElementById("userDisplay");
+      const authBtn = document.getElementById("authBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+
+      if (currentUser) {
+        display.textContent = currentUser.email;
+        authBtn.classList.add("hidden");
+        logoutBtn.classList.remove("hidden");
+        setCloudStatus("synced", "Nuvem Ativa", `Conectado como ${currentUser.email}`);
+      } else {
+        display.textContent = "Não conectada (Modo Offline / Demonstração)";
+        authBtn.classList.remove("hidden");
+        logoutBtn.classList.add("hidden");
+      }
+    }
+
+    function listenToUserHistory(userId) {
+      setCloudStatus("syncing", "Sincronizando...", "Carregando histórico da nuvem");
+      const userDocRef = db.collection("users").doc(userId);
+
+      unsubscribeHistory = userDocRef.onSnapshot(doc => {
+        if (doc.exists && Array.isArray(doc.data().history)) {
+          state.history = doc.data().history;
+        } else {
+          // Se for nova conta, tenta migrar o histórico local existente
+          const local = loadLocalData(false);
+          if (local.history && local.history.length > 0) {
+            state.history = local.history;
+            userDocRef.set({ history: state.history }, { merge: true });
+          } else {
+            state.history = [];
+          }
+        }
+        setCloudStatus("synced", "Nuvem Ativa", "Sincronizado com Firestore");
+        render();
+      }, err => {
+        console.error("Erro no listener do Firestore:", err);
+        setCloudStatus("offline", "Offline", "Acesso sem internet - gravando localmente");
+        loadLocalData();
+      });
+    }
+
+    function loadLocalData(apply = true) {
+      let data = { history: [] };
+      try {
+        const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (stored) data = JSON.parse(stored) || { history: [] };
+      } catch (e) {
+        console.warn(e);
+      }
+      if (apply) {
+        state = data;
+        render();
+      }
+      return data;
+    }
+
+    async function persistState() {
+      // 1. Sempre grava no localStorage como garantia imediata
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn("Falha ao salvar no localStorage", e);
+      }
+
+      // 2. Se a nuvem estiver ativa e houver usuário, grava no Firestore
+      if (isCloudActive && currentUser && db) {
+        setCloudStatus("syncing", "Salvando...", "Sincronizando com a nuvem");
+        try {
+          await db.collection("users").doc(currentUser.uid).set({
+            history: state.history,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          setCloudStatus("synced", "Nuvem Ativa", "Dados sincronizados com segurança");
+          return true;
+        } catch (err) {
+          console.error("Erro ao salvar no Firestore:", err);
+          setCloudStatus("offline", "Salvo Local", "Gravado no iPhone. Sincronizará quando online.");
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /**
+     * 3. CRONÔMETRO DE DESCANSO INTEGRADO (Mobile / iPhone)
+     */
+    function startTimer(seconds) {
+      clearInterval(timerInterval);
+      timerRemaining = seconds;
+      updateTimerDisplay();
+
+      timerInterval = setInterval(() => {
+        timerRemaining--;
+        if (timerRemaining <= 0) {
+          clearInterval(timerInterval);
+          timerRemaining = 0;
+          updateTimerDisplay();
+          playTimerAlert();
+        } else {
+          updateTimerDisplay();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const clock = document.getElementById("timerClock");
+      if (!clock) return;
+      const mins = Math.floor(timerRemaining / 60);
+      const secs = timerRemaining % 60;
+      clock.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+
+    function playTimerAlert() {
+      // Tenta vibração nativa (se suportado pelo celular)
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200, 100, 400]);
+      }
+      // Som suave sintetizado usando Web Audio API (dispensa arquivos externos)
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          const ctx = new AudioContext();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.8);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    /**
+     * 4. RENDERIZAÇÃO DA INTERFACE
+     */
+    function renderTabs() {
+      const tabsEl = document.getElementById("tabs");
+      const list = Object.entries(workouts).map(([key, data]) => `
+        <button class="tab ${key === current ? "active" : ""}" data-training="${key}">
+          <span>Treino ${key}</span>
+          <small>${data.day.slice(0, 3)}</small>
+        </button>
+      `).join("");
+
+      const historyTab = `
+        <button class="tab ${current === "history" ? "active" : ""}" data-training="history">
+          <span>Histórico</span>
+          <small>Cargas</small>
+        </button>
+      `;
+
+      tabsEl.innerHTML = list + historyTab;
+      tabsEl.querySelectorAll("button").forEach(btn => {
+        btn.addEventListener("click", () => {
+          current = btn.dataset.training;
+          render();
+        });
+      });
+    }
+
+    function exerciseCardHtml(exercise, target, rest, defaultRestSeconds, index) {
+      const last = latest(exercise);
+      const lastLoadText = last ? `${last.load} kg` : "Sem carga";
+      const lastDetails = last && Array.isArray(last.reps) ? `(${last.reps.join("/")} · RIR ${last.rir ?? "-"})` : "";
+      const prog = progressionAnalysis(exercise);
+
+      return `
+        <div class="ex-card" data-exercise="${esc(exercise)}">
+          <div class="ex-top">
+            <div class="ex-name-box">
+              <h3 class="ex-name">${esc(exercise)}</h3>
+              <div class="ex-specs">${esc(target)} · Descanso ${esc(rest)}</div>
+            </div>
+            <div class="ex-last-pill">
+              <small>ÚLTIMA</small>
+              <span>${esc(lastLoadText)}</span>
+            </div>
+          </div>
+
+          <div class="progression-chip ${prog.type}">
+            <span>${prog.pillText}</span>
+          </div>
+
+          <div class="ex-inputs-grid">
+            <div class="input-col">
+              <span class="input-label">Carga (kg)</span>
+              <input class="input-field" 
+                     data-field="load" 
+                     type="number" 
+                     step="0.5" 
+                     min="0" 
+                     inputmode="decimal" 
+                     placeholder="${last ? last.load : "kg"}">
+            </div>
+            <div class="input-col">
+              <span class="input-label">Série 1</span>
+              <input class="input-field" 
+                     data-field="s1" 
+                     type="number" 
+                     min="0" 
+                     max="50" 
+                     inputmode="numeric" 
+                     placeholder="8">
+            </div>
+            <div class="input-col">
+              <span class="input-label">Série 2</span>
+              <input class="input-field" 
+                     data-field="s2" 
+                     type="number" 
+                     min="0" 
+                     max="50" 
+                     inputmode="numeric" 
+                     placeholder="8">
+            </div>
+            <div class="input-col">
+              <span class="input-label">Série 3</span>
+              <input class="input-field" 
+                     data-field="s3" 
+                     type="number" 
+                     min="0" 
+                     max="50" 
+                     inputmode="numeric" 
+                     placeholder="8">
+            </div>
+            <div class="input-col">
+              <span class="input-label">RIR</span>
+              <input class="input-field" 
+                     data-field="rir" 
+                     type="number" 
+                     min="0" 
+                     max="10" 
+                     inputmode="numeric" 
+                     placeholder="1-2">
+            </div>
+          </div>
+
+          <div class="quick-helper">
+            ${last && last.load !== "" ? `
+              <button type="button" class="quick-btn" onclick="copyLastLoad(this, ${last.load})">Repetir ${last.load}kg</button>
+            ` : ""}
+            <button type="button" class="quick-btn" onclick="fillAllReps(this, 8)">Preencher 3x8</button>
+            <button type="button" class="quick-btn" onclick="startTimer(${defaultRestSeconds || 90})">⏱️ Descanso (${defaultRestSeconds || 90}s)</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderWorkout() {
+      const data = workouts[current];
+      document.getElementById("historyView").classList.add("hidden");
+      const workoutView = document.getElementById("workoutView");
+
+      workoutView.innerHTML = `
+        <section class="card">
+          <div class="workout-header">
+            <div class="workout-title">
+              <h2>Treino ${current} · ${esc(data.title)}</h2>
+              <p>${esc(data.goal)}</p>
+            </div>
+            <div class="meta-box">
+              <span class="badge">${esc(data.day)}</span>
+              <label style="font-size: 11px; font-weight:700; color:var(--muted); display:inline-flex; align-items:center; gap:4px;">
+                DATA:
+                <input class="date-input" id="sessionDate" type="date" value="${today()}">
+              </label>
+            </div>
+          </div>
+
+          <div class="timer-bar">
+            <div class="timer-display">
+              <span>⏱️ Descanso:</span>
+              <div class="timer-clock" id="timerClock">00:00</div>
+            </div>
+            <div class="timer-presets">
+              <button class="timer-preset-btn" onclick="startTimer(60)">60s</button>
+              <button class="timer-preset-btn" onclick="startTimer(90)">90s</button>
+              <button class="timer-preset-btn" onclick="startTimer(120)">120s</button>
+              <button class="timer-preset-btn" onclick="startTimer(150)">150s</button>
+              <button class="timer-preset-btn" onclick="startTimer(180)">180s</button>
+            </div>
+          </div>
+
+          <div class="guide">
+            <strong>Regra de progressão:</strong> Se completar <strong>8, 8 e 8 repetições</strong> com técnica estável e <strong>RIR 1-2</strong>, aumente na próxima sessão pelo menor incremento de carga disponível. Caso contrário, mantenha a carga e busque o 3x8 com execução sólida.
+          </div>
+
+          <div class="exercise-list">
+            ${data.exercises.map((item, index) => exerciseCardHtml(...item, index)).join("")}
+          </div>
+
+          <div class="bottom-bar">
+            <span id="saveMessage" class="save-feedback"></span>
+            <button class="btn-primary" id="saveBtn">
+              <span>💾 Salvar Sessão</span>
+            </button>
+          </div>
+        </section>
+      `;
+
+      document.getElementById("saveBtn").addEventListener("click", saveSession);
+    }
+
+    // Ações rápidas nos cards
+    window.copyLastLoad = function(btn, load) {
+      const card = btn.closest(".ex-card");
+      const loadInput = card.querySelector('[data-field="load"]');
+      if (loadInput) {
+        loadInput.value = load;
+        loadInput.focus();
+      }
+    };
+
+    window.fillAllReps = function(btn, defaultVal) {
+      const card = btn.closest(".ex-card");
+      ["s1", "s2", "s3"].forEach(f => {
+        const inp = card.querySelector(`[data-field="${f}"]`);
+        if (inp && !inp.value) inp.value = defaultVal;
+      });
+      const rirInp = card.querySelector('[data-field="rir"]');
+      if (rirInp && !rirInp.value) rirInp.value = 2;
+    };
+
+    async function saveSession() {
+      const saveBtn = document.getElementById("saveBtn");
+      const saveMsg = document.getElementById("saveMessage");
+      const date = document.getElementById("sessionDate").value || today();
+      const training = current;
+      let count = 0;
+
+      saveBtn.disabled = true;
+      saveMsg.textContent = "Processando...";
+
+      const cards = document.querySelectorAll(".ex-card");
+      cards.forEach(card => {
+        const exercise = card.dataset.exercise;
+        const inputs = [...card.querySelectorAll("input")];
+        const fields = Object.fromEntries(inputs.map(i => [i.dataset.field, i.value.trim()]));
+
+        if (Object.values(fields).some(val => val !== "")) {
+          const loadVal = fields.load === "" ? "" : Number(fields.load);
+          state.history.push({
+            date,
+            training,
+            exercise,
+            load: loadVal,
+            reps: [fields.s1 || "", fields.s2 || "", fields.s3 || ""],
+            rir: fields.rir || "",
+            notes: "",
+            timestamp: Date.now()
+          });
+          count++;
+        }
+      });
+
+      if (!count) {
+        saveMsg.textContent = "Preencha ao menos um exercício antes de salvar.";
+        saveMsg.style.color = "var(--danger)";
+        saveBtn.disabled = false;
+        return;
+      }
+
+      const ok = await persistState();
+      saveMsg.style.color = ok ? "var(--success)" : "var(--accent)";
+      saveMsg.textContent = ok 
+        ? `✅ ${count} exercício(s) salvo(s) na nuvem!` 
+        : `💾 ${count} exercício(s) salvo(s) localmente (offline).`;
+
+      setTimeout(() => {
+        renderWorkout();
+      }, 900);
+    }
+
+    /**
+     * 5. VISUALIZAÇÃO DE HISTÓRICO
+     */
+    function renderHistory() {
+      document.getElementById("workoutView").innerHTML = "";
+      const historyView = document.getElementById("historyView");
+      historyView.classList.remove("hidden");
+
+      let filtered = [...state.history].reverse();
+      if (filterHistory !== "all") {
+        filtered = filtered.filter(item => item.training === filterHistory);
+      }
+
+      historyView.innerHTML = `
+        <div class="history-container">
+          <div class="history-header">
+            <div>
+              <h2>Histórico de Cargas</h2>
+              <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">${state.history.length} registro(s) no total</p>
+            </div>
+            <div class="history-filter-pills">
+              <button class="filter-pill ${filterHistory === "all" ? "active" : ""}" onclick="setHistoryFilter('all')">Todos</button>
+              <button class="filter-pill ${filterHistory === "A" ? "active" : ""}" onclick="setHistoryFilter('A')">A</button>
+              <button class="filter-pill ${filterHistory === "B" ? "active" : ""}" onclick="setHistoryFilter('B')">B</button>
+              <button class="filter-pill ${filterHistory === "C" ? "active" : ""}" onclick="setHistoryFilter('C')">C</button>
+              <button class="filter-pill ${filterHistory === "D" ? "active" : ""}" onclick="setHistoryFilter('D')">D</button>
+              <button class="filter-pill ${filterHistory === "E" ? "active" : ""}" onclick="setHistoryFilter('E')">E</button>
+            </div>
+          </div>
+
+          ${filtered.length ? `
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Tr.</th>
+                    <th>Exercício</th>
+                    <th>Carga</th>
+                    <th>Séries (Reps)</th>
+                    <th>RIR</th>
+                    <th style="width: 30px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${filtered.map((item, idx) => `
+                    <tr>
+                      <td style="white-space: nowrap; font-weight:600;">${esc(item.date)}</td>
+                      <td><span class="badge" style="padding:2px 6px; font-size:11px;">${esc(item.training)}</span></td>
+                      <td style="font-weight:700;">${esc(item.exercise)}</td>
+                      <td style="white-space: nowrap; font-weight:800; color:var(--ink);">${item.load === "" || item.load === null || item.load === undefined ? "-" : `${esc(item.load)} kg`}</td>
+                      <td>${Array.isArray(item.reps) ? esc(item.reps.join(" / ")) : "-"}</td>
+                      <td>${item.rir !== "" && item.rir !== undefined ? esc(item.rir) : "-"}</td>
+                      <td>
+                        <button class="history-delete-btn" title="Excluir este registro" onclick="deleteHistoryItem(${state.history.indexOf(item)})">✕</button>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          ` : `
+            <div class="empty-state">
+              Nenhum registro encontrado ${filterHistory !== "all" ? `para o Treino ${filterHistory}` : ""}.
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    window.setHistoryFilter = function(filter) {
+      filterHistory = filter;
+      renderHistory();
+    };
+
+    window.deleteHistoryItem = async function(originalIndex) {
+      if (confirm("Deseja realmente remover este registro de carga?")) {
+        state.history.splice(originalIndex, 1);
+        await persistState();
+        renderHistory();
+      }
+    };
+
+    function render() {
+      renderTabs();
+      if (current === "history") {
+        renderHistory();
+      } else {
+        renderWorkout();
+      }
+    }
+
+    /**
+     * 6. CONTROLE DE MODAIS, AUTENTICAÇÃO E BACKUPS
+     */
+    // Modal de Menu
+    const menuModal = document.getElementById("menuModal");
+    document.getElementById("menuBtn").addEventListener("click", () => menuModal.classList.remove("hidden"));
+    document.getElementById("cloudStatus").addEventListener("click", () => menuModal.classList.remove("hidden"));
+    document.getElementById("closeMenuBtn").addEventListener("click", () => menuModal.classList.add("hidden"));
+    document.getElementById("noticeConfigBtn").addEventListener("click", () => {
+      document.getElementById("firebaseConfigModal").classList.remove("hidden");
+    });
+
+    // Modal de Autenticação
+    const authModal = document.getElementById("authModal");
+    const authAlert = document.getElementById("authAlert");
+    let isRegisterMode = false;
+
+    document.getElementById("authBtn").addEventListener("click", () => {
+      menuModal.classList.add("hidden");
+      authModal.classList.remove("hidden");
+    });
+    document.getElementById("closeAuthBtn").addEventListener("click", () => authModal.classList.add("hidden"));
+
+    document.getElementById("tabLogin").addEventListener("click", () => {
+      isRegisterMode = false;
+      document.getElementById("tabLogin").classList.add("active");
+      document.getElementById("tabRegister").classList.remove("active");
+      document.getElementById("authTitle").textContent = "Entrar na Conta";
+      document.getElementById("authSubmitBtn").textContent = "Entrar";
+      authAlert.className = "modal-alert";
+    });
+
+    document.getElementById("tabRegister").addEventListener("click", () => {
+      isRegisterMode = true;
+      document.getElementById("tabRegister").classList.add("active");
+      document.getElementById("tabLogin").classList.remove("active");
+      document.getElementById("authTitle").textContent = "Criar Nova Conta";
+      document.getElementById("authSubmitBtn").textContent = "Criar Conta";
+      authAlert.className = "modal-alert";
+    });
+
+    document.getElementById("authForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      const submitBtn = document.getElementById("authSubmitBtn");
+
+      if (!auth) {
+        authAlert.className = "modal-alert error";
+        authAlert.textContent = "Firebase ainda não configurado. Adicione suas chaves no botão 'Chaves da Nuvem'.";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Conectando...";
+      authAlert.className = "modal-alert";
+
+      try {
+        if (isRegisterMode) {
+          await auth.createUserWithEmailAndPassword(email, password);
+          authAlert.className = "modal-alert success";
+          authAlert.textContent = "Conta criada com sucesso!";
+        } else {
+          await auth.signInWithEmailAndPassword(email, password);
+          authAlert.className = "modal-alert success";
+          authAlert.textContent = "Login efetuado com sucesso!";
+        }
+        setTimeout(() => {
+          authModal.classList.add("hidden");
+          submitBtn.disabled = false;
+        }, 800);
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = isRegisterMode ? "Criar Conta" : "Entrar";
+        authAlert.className = "modal-alert error";
+        if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
+          authAlert.textContent = "E-mail ou senha incorretos.";
+        } else if (err.code === "auth/email-already-in-use") {
+          authAlert.textContent = "Este e-mail já está cadastrado. Alterne para a aba 'Já tenho conta'.";
+        } else if (err.code === "auth/weak-password") {
+          authAlert.textContent = "A senha deve ter pelo menos 6 caracteres.";
+        } else {
+          authAlert.textContent = err.message || "Erro ao conectar.";
+        }
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      if (auth) {
+        await auth.signOut();
+      }
+      menuModal.classList.add("hidden");
+    });
+
+    document.getElementById("resetPasswordBtn").addEventListener("click", async () => {
+      const email = document.getElementById("authEmail").value.trim();
+      if (!email) {
+        alert("Preencha o campo de e-mail para receber a redefinição de senha.");
+        return;
+      }
+      if (!auth) {
+        alert("Firebase não conectado.");
+        return;
+      }
+      try {
+        await auth.sendPasswordResetEmail(email);
+        alert(`E-mail de redefinição enviado para ${email}. Verifique sua caixa de entrada.`);
+      } catch (err) {
+        alert("Erro ao enviar e-mail: " + err.message);
+      }
+    });
+
+    // Modal de Chaves Firebase
+    const firebaseConfigModal = document.getElementById("firebaseConfigModal");
+    document.getElementById("openFirebaseConfigBtn").addEventListener("click", () => {
+      menuModal.classList.add("hidden");
+      firebaseConfigModal.classList.remove("hidden");
+      const currentConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
+      if (currentConfig) {
+        document.getElementById("firebaseConfigTextarea").value = currentConfig;
+      }
+    });
+    document.getElementById("closeFirebaseConfigBtn").addEventListener("click", () => {
+      firebaseConfigModal.classList.add("hidden");
+    });
+    document.getElementById("saveFirebaseConfigBtn").addEventListener("click", () => {
+      const raw = document.getElementById("firebaseConfigTextarea").value.trim();
+      try {
+        // Tenta limpar formato de objeto JS para JSON se necessário
+        let sanitized = raw;
+        if (!raw.startsWith("{")) {
+          const match = raw.match(/\{[\s\S]*\}/);
+          if (match) sanitized = match[0];
+        }
+        // Converte sintaxe de chaves não cotadas
+        sanitized = sanitized
+          .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":')
+          .replace(/'/g, '"');
+
+        const parsed = JSON.parse(sanitized);
+        if (!parsed.apiKey) throw new Error("apiKey ausente");
+        localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(parsed));
+        alert("Configurações salvas com sucesso! Recarregando conexão...");
+        firebaseConfigModal.classList.add("hidden");
+        location.reload();
+      } catch (err) {
+        alert("Formato de configuração inválido. Cole exatamente o objeto fornecido pelo console do Firebase.\nErro: " + err.message);
+      }
+    });
+
+    // Backup: Exportação JSON
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const backupData = {
+        app: "Controle de Treino Bruna",
+        version: "3.0-online",
+        exportDate: new Date().toISOString(),
+        history: state.history
+      };
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `backup-treino-${today()}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    // Backup: Importação JSON
+    document.getElementById("importInput").addEventListener("change", event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported.history)) {
+            throw new Error("Formato inválido: lista 'history' ausente.");
+          }
+          if (confirm(`Importar ${imported.history.length} registro(s) de treino? Isso será sincronizado na nuvem.`)) {
+            state.history = imported.history;
+            await persistState();
+            render();
+            alert("Histórico importado com sucesso!");
+            menuModal.classList.add("hidden");
+          }
+        } catch (err) {
+          alert("Erro ao ler o arquivo de backup. Verifique se é um arquivo .json válido.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // Impressão
+    document.getElementById("printBtn").addEventListener("click", () => {
+      menuModal.classList.add("hidden");
+      if (current === "history") {
+        current = "A";
+        render();
+      }
+      setTimeout(() => window.print(), 300);
+    });
+
+    // Registrar Service Worker para PWA (offline & iPhone caching)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(err => {
+          console.log("Service Worker registro opcional:", err);
+        });
+      });
+    }
+
+    // Inicialização
+    initFirebase();
+    render();
+  </script>
+</body>
+</html>

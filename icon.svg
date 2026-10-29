@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#193e43" />
+      <stop offset="100%" stop-color="#0f2528" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="115" fill="url(#grad)" />
+  <!-- Dumbbell Icon -->
+  <g transform="translate(100, 110) scale(0.6)">
+    <!-- Central bar -->
+    <rect x="180" y="235" width="160" height="50" rx="8" fill="#edf6f4" opacity="0.95" />
+    <!-- Center knurling marks -->
+    <line x1="230" y1="235" x2="230" y2="285" stroke="#193e43" stroke-width="4" stroke-dasharray="6,4" />
+    <line x1="260" y1="235" x2="260" y2="285" stroke="#193e43" stroke-width="4" stroke-dasharray="6,4" />
+    <line x1="290" y1="235" x2="290" y2="285" stroke="#193e43" stroke-width="4" stroke-dasharray="6,4" />
+    <!-- Left plates -->
+    <rect x="120" y="160" width="45" height="200" rx="14" fill="url(#accentGrad)" />
+    <rect x="75" y="195" width="35" height="130" rx="10" fill="#edf6f4" />
+    <rect x="40" y="230" width="25" height="60" rx="6" fill="#9fccc5" />
+    <!-- Right plates -->
+    <rect x="355" y="160" width="45" height="200" rx="14" fill="url(#accentGrad)" />
+    <rect x="410" y="195" width="35" height="130" rx="10" fill="#edf6f4" />
+    <rect x="455" y="230" width="25" height="60" rx="6" fill="#9fccc5" />
+  </g>
+  <!-- Text / Monogram -->
+  <text x="256" y="440" font-family="-apple-system, system-ui, sans-serif" font-size="64" font-weight="800" fill="#edf6f4" text-anchor="middle" letter-spacing="4">TREINO</text>
+  <circle cx="256" cy="385" r="8" fill="#f59e0b" />
+</svg>
