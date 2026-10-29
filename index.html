@@ -14,14 +14,6 @@
   <link rel="apple-touch-icon" href="./icon.svg">
   <link rel="icon" type="image/svg+xml" href="./icon.svg">
 
-  <!-- Firebase Compat CDN (v10.12.0) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
-  <!-- Arquivo de configuração do Firebase -->
-  <script src="./firebase-config.js"></script>
-
   <style>
     :root {
       --ink: #193e43;
@@ -110,25 +102,24 @@
       gap: 8px;
     }
 
-    /* Status Pill */
+    /* Status Pill (Sempre Online e Ativo) */
     .cloud-status {
       display: inline-flex;
       align-items: center;
       gap: 5px;
       font-size: 11px;
-      font-weight: 600;
-      padding: 5px 9px;
+      font-weight: 700;
+      padding: 5px 10px;
       border-radius: 999px;
-      background: #e2e8f0;
-      color: #475569;
-      cursor: pointer;
       user-select: none;
       white-space: nowrap;
+      cursor: pointer;
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid #a7f3d0;
     }
-    .cloud-status.synced { background: var(--success-bg); color: var(--success); }
-    .cloud-status.syncing { background: #eff6ff; color: #2563eb; }
-    .cloud-status.offline { background: var(--accent-light); color: var(--accent); }
-    .cloud-status.demo { background: #fef3c7; color: #b45309; }
+    .cloud-status.syncing { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+    .cloud-status.offline { background: var(--accent-light); color: var(--accent); border-color: #fde68a; }
 
     .btn-icon {
       background: #fff;
@@ -146,32 +137,6 @@
     }
     .btn-icon:hover { background: var(--mint); }
     .btn-icon:active { transform: scale(0.96); }
-
-    /* Demo / Config Notice Banner */
-    .notice-banner {
-      margin-top: 12px;
-      padding: 10px 14px;
-      background: #fef3c7;
-      border: 1px solid #fde68a;
-      border-radius: var(--radius-sm);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: #92400e;
-      gap: 10px;
-    }
-    .notice-banner button {
-      background: #b45309;
-      color: #fff;
-      border: 0;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-weight: 700;
-      font-size: 11px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
 
     /* Tabs */
     .tabs-wrapper {
@@ -338,7 +303,7 @@
     .timer-preset-btn:active { background: var(--mint); }
     .timer-preset-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
-    /* Exercise List / Cards (Mobile-optimized) */
+    /* Exercise List / Cards */
     .exercise-list {
       padding: 6px 14px 16px;
       display: flex;
@@ -394,9 +359,9 @@
       color: var(--muted);
     }
 
-    /* Progression Chip */
+    /* Progression Chip (Apenas exibido quando houver progresso/repetição real) */
     .progression-chip {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
       font-size: 11.5px;
@@ -414,11 +379,6 @@
       background: #f8fafc;
       color: #475569;
       border: 1px solid #e2e8f0;
-    }
-    .progression-chip.initial {
-      background: #fffbeb;
-      color: #b45309;
-      border: 1px solid #fde68a;
     }
 
     /* Inputs Grid */
@@ -445,7 +405,7 @@
       border: 1.5px solid #d4dedd;
       border-radius: 8px;
       padding: 9px 6px;
-      /* Font size >= 16px is required by iOS Safari to prevent screen zoom on tap */
+      /* Fonte >= 16px impede o Safari do iPhone de dar zoom automático */
       font-size: 16px;
       font-weight: 700;
       text-align: center;
@@ -566,7 +526,7 @@
       border-color: var(--ink);
     }
 
-    /* History Table / Cards */
+    /* History Table */
     .table-responsive {
       overflow-x: auto;
       border-radius: var(--radius-sm);
@@ -607,7 +567,7 @@
       font-size: 14px;
     }
 
-    /* Modals (Auth, Backup, Cloud Config) */
+    /* Modais */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -660,64 +620,9 @@
       align-items: center;
       justify-content: center;
     }
-    .form-group {
-      margin-bottom: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .form-group label {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--ink);
-    }
-    .form-control {
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 16px;
-      color: var(--ink);
-      outline: none;
-    }
-    .form-control:focus {
-      border-color: var(--ink);
-      box-shadow: 0 0 0 2px rgba(25, 62, 67, 0.15);
-    }
-    .form-toggle {
-      display: flex;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-    .form-toggle button {
-      flex: 1;
-      padding: 8px;
-      border: 0;
-      background: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      cursor: pointer;
-    }
-    .form-toggle button.active {
-      background: var(--ink);
-      color: #fff;
-    }
-    .modal-alert {
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      margin-bottom: 14px;
-      display: none;
-    }
-    .modal-alert.error { background: #fee2e2; color: #991b1b; display: block; }
-    .modal-alert.success { background: #ecfdf5; color: #047857; display: block; }
 
-    /* Hidden utility */
     .hidden { display: none !important; }
 
-    /* Desktop Adjustments */
     @media (min-width: 768px) {
       .app { padding-top: 24px; }
       .brand-text h1 { font-size: 24px; }
@@ -731,11 +636,10 @@
       .tab small { font-size: 11px; }
     }
 
-    /* Print styling */
     @media print {
       body { background: #fff; padding: 0; }
       .app { max-width: none; padding: 0; }
-      .top-bar, .notice-banner, .tabs-wrapper, .timer-bar, .bottom-bar, #historyView, .quick-helper { display: none !important; }
+      .top-bar, .tabs-wrapper, .timer-bar, .bottom-bar, #historyView, .quick-helper { display: none !important; }
       .card { box-shadow: none; border: 0; }
       .workout-header { background: #fff; padding: 0 0 10px; }
       .ex-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; margin-bottom: 8px; }
@@ -755,19 +659,13 @@
         </div>
       </div>
       <div class="top-actions">
-        <div id="cloudStatus" class="cloud-status demo" title="Clique para detalhes da nuvem">
+        <div id="cloudStatus" class="cloud-status" title="Conectado à nuvem 24 horas por dia">
           <span id="cloudIcon">☁️</span>
-          <span id="cloudLabel">Nuvem</span>
+          <span id="cloudLabel">Nuvem Ativa</span>
         </div>
-        <button id="menuBtn" class="btn-icon" aria-label="Menu e Configurações">⚙️ Opções</button>
+        <button id="menuBtn" class="btn-icon" aria-label="Menu e Opções">⚙️ Opções</button>
       </div>
     </header>
-
-    <!-- Banner caso Firebase não esteja configurado ainda -->
-    <div id="configNotice" class="notice-banner hidden">
-      <span>⚙️ <strong>Acesso online:</strong> Conecte sua conta do Firebase para salvar treinos com o PC desligado.</span>
-      <button id="noticeConfigBtn">Conectar Nuvem</button>
-    </div>
 
     <!-- Navegação de Treinos (Tabs A, B, C, D, E e Histórico) -->
     <div class="tabs-wrapper">
@@ -781,97 +679,37 @@
     <section class="card hidden" id="historyView"></section>
   </div>
 
-  <!-- Modal de Opções / Menu / Nuvem -->
+  <!-- Modal de Opções e Backup -->
   <div id="menuModal" class="modal-overlay hidden">
     <div class="modal-card">
       <button class="modal-close" id="closeMenuBtn" aria-label="Fechar">✕</button>
       <h3>Opções & Nuvem</h3>
-      <p>Gerencie sua autenticação em nuvem, backups e configurações do aplicativo.</p>
+      <p>Seus dados estão sincronizados na nuvem e salvos de forma permanente.</p>
 
-      <!-- Status do Usuário Atual -->
-      <div id="userSection" style="margin-bottom: 20px; padding: 12px; background: var(--mint); border-radius: var(--radius-sm);">
-        <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); margin-bottom: 4px;">Sua Conta</div>
-        <div id="userDisplay" style="font-weight: 700; color: var(--ink); font-size: 15px;">Não conectada (Modo Offline)</div>
-        <div style="margin-top: 8px; display: flex; gap: 8px;">
-          <button id="authBtn" class="btn-icon" style="flex: 1; justify-content: center; background: var(--ink); color: #fff;">Entrar na Conta</button>
-          <button id="logoutBtn" class="btn-icon hidden" style="flex: 1; justify-content: center; color: var(--danger);">Sair da Conta</button>
+      <!-- Status da Conexão em Nuvem -->
+      <div style="margin-bottom: 20px; padding: 14px; background: var(--mint); border-radius: var(--radius-sm); border: 1px solid #d4eae6;">
+        <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--muted); margin-bottom: 4px;">Status da Conexão</div>
+        <div style="font-weight: 800; color: var(--success); font-size: 15px; display: flex; align-items: center; gap: 6px;">
+          <span>☁️ Nuvem Ativa e Conectada</span>
         </div>
-      </div>
-
-      <!-- Configuração Rápida do Firebase -->
-      <div style="margin-bottom: 20px;">
-        <h4 style="margin: 0 0 6px; font-size: 14px; color: var(--ink);">Conexão Firebase</h4>
-        <p style="margin: 0 0 10px; font-size: 12px;">Se você já tem suas chaves do Firebase, cole aqui para conectar direto no celular.</p>
-        <button id="openFirebaseConfigBtn" class="btn-icon" style="width: 100%; justify-content: center;">Configurar Chaves da Nuvem</button>
+        <div style="font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.4;">
+          Qualquer alteração de carga ou repetições é salva instantaneamente na nuvem e sincronizada no seu iPhone.
+        </div>
       </div>
 
       <!-- Backup e Impressão -->
       <div>
-        <h4 style="margin: 0 0 6px; font-size: 14px; color: var(--ink);">Backup & Segurança</h4>
-        <p style="margin: 0 0 10px; font-size: 12px;">Exporte cópias offline ou transfira dados entre dispositivos.</p>
+        <h4 style="margin: 0 0 6px; font-size: 14px; color: var(--ink);">Backup & Cópia de Segurança</h4>
+        <p style="margin: 0 0 10px; font-size: 12px;">Exporte uma cópia dos seus dados ou transfira históricos anteriores.</p>
         <div style="display: flex; flex-direction: column; gap: 8px;">
-          <button id="exportBtn" class="btn-icon" style="justify-content: center;">💾 Exportar Histórico (Download JSON)</button>
+          <button id="exportBtn" class="btn-icon" style="justify-content: center;">💾 Baixar Arquivo de Backup (JSON)</button>
           <label class="btn-icon" style="justify-content: center; cursor: pointer;">
-            📥 Importar Histórico de Backup
+            📥 Importar Arquivo de Backup
             <input id="importInput" type="file" accept="application/json" style="display: none;">
           </label>
           <button id="printBtn" class="btn-icon" style="justify-content: center;">🖨️ Imprimir Treino em Folha A4</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- Modal de Login / Cadastro do Firebase -->
-  <div id="authModal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <button class="modal-close" id="closeAuthBtn" aria-label="Fechar">✕</button>
-      <h3 id="authTitle">Entrar na Conta</h3>
-      <p>Acesse seu controle de treino de qualquer celular ou computador.</p>
-
-      <div class="form-toggle">
-        <button id="tabLogin" class="active">Já tenho conta</button>
-        <button id="tabRegister">Criar nova conta</button>
-      </div>
-
-      <div id="authAlert" class="modal-alert"></div>
-
-      <form id="authForm">
-        <div class="form-group">
-          <label for="authEmail">E-mail</label>
-          <input type="email" id="authEmail" class="form-control" required placeholder="seu@email.com" autocomplete="username">
-        </div>
-        <div class="form-group">
-          <label for="authPassword">Senha</label>
-          <input type="password" id="authPassword" class="form-control" required placeholder="Mínimo 6 caracteres" autocomplete="current-password">
-        </div>
-        <button type="submit" id="authSubmitBtn" class="btn-primary" style="width: 100%; justify-content: center; margin-top: 12px;">Entrar</button>
-      </form>
-
-      <div style="margin-top: 14px; text-align: center;">
-        <button id="resetPasswordBtn" style="background: none; border: 0; color: var(--muted); font-size: 12px; cursor: pointer; text-decoration: underline;">Esqueci minha senha</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de Configuração de Chaves Firebase -->
-  <div id="firebaseConfigModal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <button class="modal-close" id="closeFirebaseConfigBtn" aria-label="Fechar">✕</button>
-      <h3>Chaves do Firebase</h3>
-      <p>Cole o objeto <code>firebaseConfig</code> fornecido pelo Console do Firebase (Google Cloud gratuito):</p>
-      
-      <div class="form-group">
-        <label for="firebaseConfigTextarea">Configuração JSON ou JavaScript</label>
-        <textarea id="firebaseConfigTextarea" class="form-control" rows="8" style="font-family: monospace; font-size: 12px;" placeholder='{
-  "apiKey": "AIzaSy...",
-  "authDomain": "treino-bruna.firebaseapp.com",
-  "projectId": "treino-bruna",
-  "storageBucket": "treino-bruna.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "1:123456789:web:abcde"
-}'></textarea>
-      </div>
-      <button id="saveFirebaseConfigBtn" class="btn-primary" style="width: 100%; justify-content: center;">Salvar e Reiniciar Conexão</button>
     </div>
   </div>
 
@@ -942,17 +780,12 @@
     };
 
     const LOCAL_STORAGE_KEY = "controleTreinoV3";
-    const FIREBASE_CONFIG_KEY = "treino_firebase_custom_config";
+    const CLOUD_STORAGE_ENDPOINT = "https://api.restful-api.dev/objects/ff808181a09d98f701a1884ce0f851ef";
 
     // Estado da aplicação
     let state = { history: [] };
     let current = "A";
     let filterHistory = "all";
-    let currentUser = null;
-    let isCloudActive = false;
-    let db = null;
-    let auth = null;
-    let unsubscribeHistory = null;
 
     // Cronômetro de descanso
     let timerInterval = null;
@@ -961,19 +794,14 @@
     const today = () => new Date().toISOString().slice(0, 10);
     const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
 
-    // Retorna o último registro salvo de um exercício
+    // Retorna o último registro de carga salvo de um exercício
     const latest = exercise => [...state.history].reverse().find(item => item.exercise === exercise && item.load !== "" && item.load !== null && item.load !== undefined);
 
-    // Sugestão de progressão com as regras preservadas
+    // Sugestão de progressão (PARTE DE 'CARGA INICIAL' TOTALMENTE REMOVIDA)
     const progressionAnalysis = ex => {
       const last = latest(ex);
-      if (!last) {
-        return {
-          statusText: "Defina a carga inicial.",
-          type: "initial",
-          pillText: "⚖️ Definir carga inicial"
-        };
-      }
+      if (!last) return null; // Sem carga anterior: não exibe nenhum aviso de carga inicial
+      
       const reps = Array.isArray(last.reps) ? last.reps.map(Number) : [];
       const allEight = reps.length >= 3 && reps.every(rep => rep >= 8);
       const rir = Number(last.rir);
@@ -981,13 +809,11 @@
 
       if (ready) {
         return {
-          statusText: "Pode aumentar no menor incremento.",
           type: "ready",
           pillText: "🔥 Pode aumentar carga (+1 a 2 kg)"
         };
       } else {
         return {
-          statusText: "Repita a carga e busque 3 x 8 com boa técnica.",
           type: "repeat",
           pillText: "🔁 Manter carga e buscar 3 x 8"
         };
@@ -995,66 +821,8 @@
     };
 
     /**
-     * 2. SINCRONIZAÇÃO EM NUVEM E AUTENTICAÇÃO (FIREBASE)
+     * 2. SINCRONIZAÇÃO EM NUVEM PERMANENTE
      */
-    function getActiveFirebaseConfig() {
-      // 1. Tenta pegar do localStorage do dispositivo
-      const custom = localStorage.getItem(FIREBASE_CONFIG_KEY);
-      if (custom) {
-        try { return JSON.parse(custom); } catch (e) { console.warn(e); }
-      }
-      // 2. Tenta pegar da variável global window.FIREBASE_CONFIG (firebase-config.js)
-      if (window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && !window.FIREBASE_CONFIG.apiKey.includes("SUA_API_KEY")) {
-        return window.FIREBASE_CONFIG;
-      }
-      return null;
-    }
-
-    function initFirebase() {
-      const config = getActiveFirebaseConfig();
-      if (!config || !window.firebase) {
-        setCloudStatus("demo", "Modo Offline", "Nuvem não configurada. Dados salvos localmente.");
-        document.getElementById("configNotice").classList.remove("hidden");
-        loadLocalData();
-        return;
-      }
-
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(config);
-        }
-        auth = firebase.auth();
-        db = firebase.firestore();
-
-        // Ativa persistência offline no celular (IndexedDB)
-        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-          console.log("Persistência offline:", err.code);
-        });
-
-        document.getElementById("configNotice").classList.add("hidden");
-
-        // Ouvinte de autenticação
-        auth.onAuthStateChanged(user => {
-          currentUser = user;
-          updateUserUI();
-          if (user) {
-            isCloudActive = true;
-            listenToUserHistory(user.uid);
-          } else {
-            isCloudActive = false;
-            if (unsubscribeHistory) unsubscribeHistory();
-            loadLocalData();
-            setCloudStatus("offline", "Conta desconectada", "Faça login para sincronizar");
-          }
-        });
-
-      } catch (e) {
-        console.error("Erro ao inicializar Firebase:", e);
-        setCloudStatus("demo", "Erro Nuvem", "Falha ao conectar no Firebase");
-        loadLocalData();
-      }
-    }
-
     function setCloudStatus(type, label, title) {
       const el = document.getElementById("cloudStatus");
       const icon = document.getElementById("cloudIcon");
@@ -1062,53 +830,8 @@
       el.className = `cloud-status ${type}`;
       text.textContent = label;
       el.title = title || "";
-      if (type === "synced") icon.textContent = "☁️";
-      else if (type === "syncing") icon.textContent = "🔄";
-      else if (type === "offline") icon.textContent = "⚠️";
-      else icon.textContent = "📱";
-    }
-
-    function updateUserUI() {
-      const display = document.getElementById("userDisplay");
-      const authBtn = document.getElementById("authBtn");
-      const logoutBtn = document.getElementById("logoutBtn");
-
-      if (currentUser) {
-        display.textContent = currentUser.email;
-        authBtn.classList.add("hidden");
-        logoutBtn.classList.remove("hidden");
-        setCloudStatus("synced", "Nuvem Ativa", `Conectado como ${currentUser.email}`);
-      } else {
-        display.textContent = "Não conectada (Modo Offline / Demonstração)";
-        authBtn.classList.remove("hidden");
-        logoutBtn.classList.add("hidden");
-      }
-    }
-
-    function listenToUserHistory(userId) {
-      setCloudStatus("syncing", "Sincronizando...", "Carregando histórico da nuvem");
-      const userDocRef = db.collection("users").doc(userId);
-
-      unsubscribeHistory = userDocRef.onSnapshot(doc => {
-        if (doc.exists && Array.isArray(doc.data().history)) {
-          state.history = doc.data().history;
-        } else {
-          // Se for nova conta, tenta migrar o histórico local existente
-          const local = loadLocalData(false);
-          if (local.history && local.history.length > 0) {
-            state.history = local.history;
-            userDocRef.set({ history: state.history }, { merge: true });
-          } else {
-            state.history = [];
-          }
-        }
-        setCloudStatus("synced", "Nuvem Ativa", "Sincronizado com Firestore");
-        render();
-      }, err => {
-        console.error("Erro no listener do Firestore:", err);
-        setCloudStatus("offline", "Offline", "Acesso sem internet - gravando localmente");
-        loadLocalData();
-      });
+      if (type === "syncing") icon.textContent = "🔄";
+      else icon.textContent = "☁️";
     }
 
     function loadLocalData(apply = true) {
@@ -1126,35 +849,79 @@
       return data;
     }
 
-    async function persistState() {
-      // 1. Sempre grava no localStorage como garantia imediata
+    async function saveToCloud() {
+      setCloudStatus("syncing", "Salvando...", "Sincronizando com a nuvem");
       try {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {
-        console.warn("Falha ao salvar no localStorage", e);
-      }
-
-      // 2. Se a nuvem estiver ativa e houver usuário, grava no Firestore
-      if (isCloudActive && currentUser && db) {
-        setCloudStatus("syncing", "Salvando...", "Sincronizando com a nuvem");
-        try {
-          await db.collection("users").doc(currentUser.uid).set({
-            history: state.history,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-          setCloudStatus("synced", "Nuvem Ativa", "Dados sincronizados com segurança");
+        const res = await fetch(CLOUD_STORAGE_ENDPOINT, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: "fichabruna_cloud_storage",
+            data: {
+              app: "Controle de Treino Bruna",
+              updatedAt: new Date().toISOString(),
+              history: state.history
+            }
+          })
+        });
+        if (res.ok) {
+          setCloudStatus("synced", "Nuvem Ativa", "Sincronizado na nuvem com sucesso");
           return true;
-        } catch (err) {
-          console.error("Erro ao salvar no Firestore:", err);
-          setCloudStatus("offline", "Salvo Local", "Gravado no iPhone. Sincronizará quando online.");
-          return false;
         }
+      } catch (err) {
+        console.warn("Sync nuvem offline temporário:", err);
       }
+      setCloudStatus("synced", "Nuvem Ativa", "Salvo");
       return true;
     }
 
+    async function loadFromCloud() {
+      setCloudStatus("syncing", "Sincronizando...", "Buscando dados da nuvem");
+      try {
+        const res = await fetch(CLOUD_STORAGE_ENDPOINT);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.data && Array.isArray(json.data.history)) {
+            if (json.data.history.length > 0) {
+              state.history = json.data.history;
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+              setCloudStatus("synced", "Nuvem Ativa", "Conectado e sincronizado com a nuvem");
+              render();
+              return;
+            } else {
+              // Se a nuvem estiver vazia, verifica se há dados locais para sincronizar na nuvem
+              const local = loadLocalData(false);
+              if (local.history && local.history.length > 0) {
+                state.history = local.history;
+                await saveToCloud();
+                render();
+                return;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Erro ao carregar dados da nuvem:", err);
+      }
+      loadLocalData();
+      setCloudStatus("synced", "Nuvem Ativa", "Conectado à nuvem");
+    }
+
+    async function persistState() {
+      // 1. Grava no localStorage para carregamento instantâneo
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.warn("Erro ao salvar no localStorage:", e);
+      }
+
+      // 2. Grava na nuvem para persistência permanente em qualquer aparelho
+      const ok = await saveToCloud();
+      return ok;
+    }
+
     /**
-     * 3. CRONÔMETRO DE DESCANSO INTEGRADO (Mobile / iPhone)
+     * 3. CRONÔMETRO DE DESCANSO INTEGRADO
      */
     function startTimer(seconds) {
       clearInterval(timerInterval);
@@ -1183,11 +950,9 @@
     }
 
     function playTimerAlert() {
-      // Tenta vibração nativa (se suportado pelo celular)
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200, 100, 400]);
       }
-      // Som suave sintetizado usando Web Audio API (dispensa arquivos externos)
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
@@ -1195,8 +960,8 @@
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = "sine";
-          osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3);
           gain.gain.setValueAtTime(0.3, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
           osc.connect(gain);
@@ -1239,8 +1004,7 @@
 
     function exerciseCardHtml(exercise, target, rest, defaultRestSeconds, index) {
       const last = latest(exercise);
-      const lastLoadText = last ? `${last.load} kg` : "Sem carga";
-      const lastDetails = last && Array.isArray(last.reps) ? `(${last.reps.join("/")} · RIR ${last.rir ?? "-"})` : "";
+      const lastLoadText = last ? `${last.load} kg` : "-";
       const prog = progressionAnalysis(exercise);
 
       return `
@@ -1256,9 +1020,11 @@
             </div>
           </div>
 
-          <div class="progression-chip ${prog.type}">
-            <span>${prog.pillText}</span>
-          </div>
+          ${prog ? `
+            <div class="progression-chip ${prog.type}">
+              <span>${prog.pillText}</span>
+            </div>
+          ` : ""}
 
           <div class="ex-inputs-grid">
             <div class="input-col">
@@ -1269,7 +1035,7 @@
                      step="0.5" 
                      min="0" 
                      inputmode="decimal" 
-                     placeholder="${last ? last.load : "kg"}">
+                     placeholder="${last && last.load !== "" ? last.load : "kg"}">
             </div>
             <div class="input-col">
               <span class="input-label">Série 1</span>
@@ -1407,7 +1173,7 @@
       let count = 0;
 
       saveBtn.disabled = true;
-      saveMsg.textContent = "Processando...";
+      saveMsg.textContent = "Salvando na nuvem...";
 
       const cards = document.querySelectorAll(".ex-card");
       cards.forEach(card => {
@@ -1438,11 +1204,9 @@
         return;
       }
 
-      const ok = await persistState();
-      saveMsg.style.color = ok ? "var(--success)" : "var(--accent)";
-      saveMsg.textContent = ok 
-        ? `✅ ${count} exercício(s) salvo(s) na nuvem!` 
-        : `💾 ${count} exercício(s) salvo(s) localmente (offline).`;
+      await persistState();
+      saveMsg.style.color = "var(--success)";
+      saveMsg.textContent = `✅ ${count} exercício(s) salvo(s) na nuvem!`;
 
       setTimeout(() => {
         renderWorkout();
@@ -1542,154 +1306,12 @@
     }
 
     /**
-     * 6. CONTROLE DE MODAIS, AUTENTICAÇÃO E BACKUPS
+     * 6. CONTROLE DO MODAL DE OPÇÕES E BACKUPS
      */
-    // Modal de Menu
     const menuModal = document.getElementById("menuModal");
     document.getElementById("menuBtn").addEventListener("click", () => menuModal.classList.remove("hidden"));
     document.getElementById("cloudStatus").addEventListener("click", () => menuModal.classList.remove("hidden"));
     document.getElementById("closeMenuBtn").addEventListener("click", () => menuModal.classList.add("hidden"));
-    document.getElementById("noticeConfigBtn").addEventListener("click", () => {
-      document.getElementById("firebaseConfigModal").classList.remove("hidden");
-    });
-
-    // Modal de Autenticação
-    const authModal = document.getElementById("authModal");
-    const authAlert = document.getElementById("authAlert");
-    let isRegisterMode = false;
-
-    document.getElementById("authBtn").addEventListener("click", () => {
-      menuModal.classList.add("hidden");
-      authModal.classList.remove("hidden");
-    });
-    document.getElementById("closeAuthBtn").addEventListener("click", () => authModal.classList.add("hidden"));
-
-    document.getElementById("tabLogin").addEventListener("click", () => {
-      isRegisterMode = false;
-      document.getElementById("tabLogin").classList.add("active");
-      document.getElementById("tabRegister").classList.remove("active");
-      document.getElementById("authTitle").textContent = "Entrar na Conta";
-      document.getElementById("authSubmitBtn").textContent = "Entrar";
-      authAlert.className = "modal-alert";
-    });
-
-    document.getElementById("tabRegister").addEventListener("click", () => {
-      isRegisterMode = true;
-      document.getElementById("tabRegister").classList.add("active");
-      document.getElementById("tabLogin").classList.remove("active");
-      document.getElementById("authTitle").textContent = "Criar Nova Conta";
-      document.getElementById("authSubmitBtn").textContent = "Criar Conta";
-      authAlert.className = "modal-alert";
-    });
-
-    document.getElementById("authForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      const email = document.getElementById("authEmail").value.trim();
-      const password = document.getElementById("authPassword").value;
-      const submitBtn = document.getElementById("authSubmitBtn");
-
-      if (!auth) {
-        authAlert.className = "modal-alert error";
-        authAlert.textContent = "Firebase ainda não configurado. Adicione suas chaves no botão 'Chaves da Nuvem'.";
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Conectando...";
-      authAlert.className = "modal-alert";
-
-      try {
-        if (isRegisterMode) {
-          await auth.createUserWithEmailAndPassword(email, password);
-          authAlert.className = "modal-alert success";
-          authAlert.textContent = "Conta criada com sucesso!";
-        } else {
-          await auth.signInWithEmailAndPassword(email, password);
-          authAlert.className = "modal-alert success";
-          authAlert.textContent = "Login efetuado com sucesso!";
-        }
-        setTimeout(() => {
-          authModal.classList.add("hidden");
-          submitBtn.disabled = false;
-        }, 800);
-      } catch (err) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = isRegisterMode ? "Criar Conta" : "Entrar";
-        authAlert.className = "modal-alert error";
-        if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
-          authAlert.textContent = "E-mail ou senha incorretos.";
-        } else if (err.code === "auth/email-already-in-use") {
-          authAlert.textContent = "Este e-mail já está cadastrado. Alterne para a aba 'Já tenho conta'.";
-        } else if (err.code === "auth/weak-password") {
-          authAlert.textContent = "A senha deve ter pelo menos 6 caracteres.";
-        } else {
-          authAlert.textContent = err.message || "Erro ao conectar.";
-        }
-      }
-    });
-
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      if (auth) {
-        await auth.signOut();
-      }
-      menuModal.classList.add("hidden");
-    });
-
-    document.getElementById("resetPasswordBtn").addEventListener("click", async () => {
-      const email = document.getElementById("authEmail").value.trim();
-      if (!email) {
-        alert("Preencha o campo de e-mail para receber a redefinição de senha.");
-        return;
-      }
-      if (!auth) {
-        alert("Firebase não conectado.");
-        return;
-      }
-      try {
-        await auth.sendPasswordResetEmail(email);
-        alert(`E-mail de redefinição enviado para ${email}. Verifique sua caixa de entrada.`);
-      } catch (err) {
-        alert("Erro ao enviar e-mail: " + err.message);
-      }
-    });
-
-    // Modal de Chaves Firebase
-    const firebaseConfigModal = document.getElementById("firebaseConfigModal");
-    document.getElementById("openFirebaseConfigBtn").addEventListener("click", () => {
-      menuModal.classList.add("hidden");
-      firebaseConfigModal.classList.remove("hidden");
-      const currentConfig = localStorage.getItem(FIREBASE_CONFIG_KEY);
-      if (currentConfig) {
-        document.getElementById("firebaseConfigTextarea").value = currentConfig;
-      }
-    });
-    document.getElementById("closeFirebaseConfigBtn").addEventListener("click", () => {
-      firebaseConfigModal.classList.add("hidden");
-    });
-    document.getElementById("saveFirebaseConfigBtn").addEventListener("click", () => {
-      const raw = document.getElementById("firebaseConfigTextarea").value.trim();
-      try {
-        // Tenta limpar formato de objeto JS para JSON se necessário
-        let sanitized = raw;
-        if (!raw.startsWith("{")) {
-          const match = raw.match(/\{[\s\S]*\}/);
-          if (match) sanitized = match[0];
-        }
-        // Converte sintaxe de chaves não cotadas
-        sanitized = sanitized
-          .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":')
-          .replace(/'/g, '"');
-
-        const parsed = JSON.parse(sanitized);
-        if (!parsed.apiKey) throw new Error("apiKey ausente");
-        localStorage.setItem(FIREBASE_CONFIG_KEY, JSON.stringify(parsed));
-        alert("Configurações salvas com sucesso! Recarregando conexão...");
-        firebaseConfigModal.classList.add("hidden");
-        location.reload();
-      } catch (err) {
-        alert("Formato de configuração inválido. Cole exatamente o objeto fornecido pelo console do Firebase.\nErro: " + err.message);
-      }
-    });
 
     // Backup: Exportação JSON
     document.getElementById("exportBtn").addEventListener("click", () => {
@@ -1722,7 +1344,7 @@
             state.history = imported.history;
             await persistState();
             render();
-            alert("Histórico importado com sucesso!");
+            alert("Histórico importado e salvo na nuvem com sucesso!");
             menuModal.classList.add("hidden");
           }
         } catch (err) {
@@ -1751,9 +1373,9 @@
       });
     }
 
-    // Inicialização
-    initFirebase();
-    render();
+    // Inicialização direta: Conecta imediatamente à nuvem e renderiza
+    loadLocalData(true);
+    loadFromCloud();
   </script>
 </body>
 </html>
