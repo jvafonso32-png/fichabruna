@@ -1,5 +1,5 @@
-// Service Worker - Ficha Bruna (Network-First para garantir atualizações imediatas no iPhone)
-const CACHE_NAME = 'fichabruna-v3-weedverso';
+// Service Worker - Ficha Bruna (Força limpeza total de cache antigo e atualização imediata no iOS)
+const CACHE_NAME = 'fichabruna-v4-force-refresh';
 const PRECACHE_ASSETS = [
   './',
   'manifest.json',

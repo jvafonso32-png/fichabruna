@@ -655,7 +655,7 @@
           <div class="logo">B</div>
           <div class="brandText">
             <h1>Controle de Treino</h1>
-            <span class="brandSub">Hipertrofia · Mulher 27 anos · Tríceps</span>
+            <span class="brandSub">Hipertrofia · Mulher 27 anos · v4.1</span>
           </div>
         </div>
         <div class="topActions">
@@ -1446,10 +1446,10 @@
       setTimeout(() => window.print(), 300);
     });
 
-    // Service Worker com Network-First (Elimina cache antigo no iPhone)
+    // Service Worker com Network-First (Força atualização imediata em celulares e descarta cache antigo)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").then(reg => {
+        navigator.serviceWorker.register("./sw.js?v=4.1").then(reg => {
           reg.update();
         }).catch(() => {});
       });
