@@ -786,8 +786,9 @@
     let syncDebounceTimer = null;
 
     // Cronômetro de descanso
+    const TIMER_STORAGE_KEY = "fichabruna_timer_target";
+    let timerTargetTimestamp = 0;
     let timerInterval = null;
-    let timerRemaining = 0;
 
     const today = () => new Date().toISOString().slice(0, 10);
     const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -848,6 +849,23 @@
       } catch (e) {
         state = { history: [] };
       }
+      return state;
+    }
+
+    function mergeHistories(localList, remoteList) {
+      const result = [];
+      const seen = new Set();
+      const add = item => {
+        if (!item || typeof item !== "object") return;
+        const key = `${item.date || ''}_${item.training || ''}_${item.exercise || ''}_${JSON.stringify(item.reps || [])}_${item.load || ''}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          result.push(item);
+        }
+      };
+      (localList || []).forEach(add);
+      (remoteList || []).forEach(add);
+      return result;
     }
 
     async function pushToCloud() {
@@ -890,13 +908,15 @@
     }
 
     async function pullFromCloud() {
-      updateStatus("🔄 Carregando...", "syncing");
+      updateStatus("🔄 Sincronizando...", "syncing");
       try {
         const res = await fetch(CLOUD_ENDPOINT);
         if (res.ok) {
           const json = await res.json();
-          if (json && json.data && Array.isArray(json.data.history) && json.data.history.length > 0) {
-            state.history = json.data.history;
+          if (json && json.data && Array.isArray(json.data.history)) {
+            const currentLocal = loadLocal();
+            const merged = mergeHistories(currentLocal.history, json.data.history);
+            state.history = merged;
             localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
             const hora = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
             updateStatus(`☁️ Sincronizado ${hora}`, "ok");
@@ -913,34 +933,106 @@
     }
 
     /**
-     * CRONÔMETRO DE DESCANSO INTEGRADO
+     * CRONÔMETRO DE DESCANSO REAL (À PROVA DE TELA BLOQUEADA / SAÍDA DO SAFARI NO IPHONE)
      */
+    function getRemainingSeconds() {
+      if (!timerTargetTimestamp) return 0;
+      return Math.max(0, Math.ceil((timerTargetTimestamp - Date.now()) / 1000));
+    }
+
     function startTimer(seconds) {
       clearInterval(timerInterval);
-      timerRemaining = seconds;
-      updateTimerDisplay();
+      timerTargetTimestamp = Date.now() + (seconds * 1000);
+      try {
+        localStorage.setItem(TIMER_STORAGE_KEY, String(timerTargetTimestamp));
+      } catch (e) {}
 
-      timerInterval = setInterval(() => {
-        timerRemaining--;
-        if (timerRemaining <= 0) {
-          clearInterval(timerInterval);
-          timerRemaining = 0;
-          updateTimerDisplay();
-          playTimerAlert();
-          showToast("⏱️ Descanso concluído! Pronta para a próxima série.", "ok");
-        } else {
-          updateTimerDisplay();
-        }
-      }, 1000);
+      updateTimerDisplay();
+      setCancelBtnVisibility(true);
+      showToast(`⏱️ Descanso de ${seconds}s iniciado`, "ok");
+
+      timerInterval = setInterval(tickTimer, 500);
     }
 
-    function updateTimerDisplay() {
+    function cancelTimer() {
+      clearInterval(timerInterval);
+      timerTargetTimestamp = 0;
+      try {
+        localStorage.removeItem(TIMER_STORAGE_KEY);
+      } catch (e) {}
+      updateTimerDisplay(0);
+      setCancelBtnVisibility(false);
+      document.title = "Treino · Bruna";
+      showToast("⏱️ Cronômetro cancelado.", "warn");
+    }
+
+    function tickTimer() {
+      const remaining = getRemainingSeconds();
+      updateTimerDisplay(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        timerTargetTimestamp = 0;
+        try {
+          localStorage.removeItem(TIMER_STORAGE_KEY);
+        } catch (e) {}
+        setCancelBtnVisibility(false);
+        playTimerAlert();
+        document.title = "🔔 (00:00) Descanso Concluído!";
+        showToast("⏱️ Descanso concluído! Pronta para a próxima série.", "ok");
+      }
+    }
+
+    function updateTimerDisplay(forceSeconds) {
       const clock = document.getElementById("timerClock");
       if (!clock) return;
-      const mins = Math.floor(timerRemaining / 60);
-      const secs = timerRemaining % 60;
-      clock.textContent = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      const s = forceSeconds !== undefined ? forceSeconds : getRemainingSeconds();
+      const mins = Math.floor(s / 60);
+      const secs = s % 60;
+      const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+      clock.textContent = timeStr;
+      if (s > 0) {
+        document.title = `⏱️ (${timeStr}) Treino · Bruna`;
+      }
     }
+
+    function setCancelBtnVisibility(visible) {
+      const btn = document.getElementById("timerCancelBtn");
+      if (btn) {
+        btn.style.display = visible ? "inline-flex" : "none";
+      }
+    }
+
+    function restoreTimerOnLoad() {
+      try {
+        const stored = localStorage.getItem(TIMER_STORAGE_KEY);
+        if (stored) {
+          const target = Number(stored);
+          if (target > Date.now()) {
+            timerTargetTimestamp = target;
+            updateTimerDisplay();
+            setCancelBtnVisibility(true);
+            clearInterval(timerInterval);
+            timerInterval = setInterval(tickTimer, 500);
+          } else {
+            localStorage.removeItem(TIMER_STORAGE_KEY);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Ouvintes de reativação para quando o usuário desbloqueia o iPhone ou volta para o Safari
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && timerTargetTimestamp > 0) {
+        tickTimer();
+      }
+    });
+    window.addEventListener("focus", () => {
+      if (timerTargetTimestamp > 0) tickTimer();
+    });
+    window.addEventListener("pageshow", () => {
+      if (timerTargetTimestamp > 0) tickTimer();
+    });
 
     function playTimerAlert() {
       if (navigator.vibrate) {
@@ -1120,6 +1212,7 @@
             <div class="timerClockWrap">
               <span class="mini">Cronômetro:</span>
               <div class="timerClock" id="timerClock">00:00</div>
+              <button type="button" class="quickChip" id="timerCancelBtn" onclick="cancelTimer()" style="display:none; color:var(--d); border-color:rgba(255,95,112,.4); background:rgba(255,95,112,.12); margin-left:4px;">✕ Cancelar</button>
             </div>
             <div class="timerPresets">
               <button class="timerPresetBtn" onclick="startTimer(60)">60s</button>
@@ -1141,6 +1234,8 @@
       `;
 
       document.getElementById("saveBtn").addEventListener("click", saveSession);
+      updateTimerDisplay();
+      setCancelBtnVisibility(timerTargetTimestamp > 0 && getRemainingSeconds() > 0);
     }
 
     // Ações Rápidas nos Cards
@@ -1363,6 +1458,7 @@
     // Inicialização Simultânea
     loadLocal();
     render();
+    restoreTimerOnLoad();
     pullFromCloud();
   </script>
 </body>
